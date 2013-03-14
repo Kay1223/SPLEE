@@ -1,4 +1,4 @@
-module Logic (rf, prf, main) where
+module Logic where
 
 main :: IO ()
 main = do
@@ -112,6 +112,9 @@ fromOr (x@(_ :| _) :| y@(Not (Atom _))) xs =
 fromOr (x@(_ :| _) :| y@(_ :| _)) xs =
     let yy = fromOr y xs
     in [xx | xx <- fromOr x xs, xx `notElem` yy] ++ yy
+fromOr (Not x@(_ :| _) :| Not y@(_ :| _)) xs =
+    let yy = fromOr (Not y) xs
+    in [xx | xx <- fromOr (Not x) xs, xx `notElem` yy] ++ yy
 fromOr (x :| y) xs = endList x y xs
 fromOr _ _ = []
 
@@ -121,12 +124,15 @@ fromAnd (x@(Atom _) :& y@(_ :& _)) xs =
 fromAnd (x@(_ :& _) :& y@(Atom _)) xs =
     fromAnd x (addTerm y xs)
 fromAnd (x@(Not (Atom _)) :& y@(_ :& _)) xs =
-    fromOr y (addTerm x xs)
+    fromAnd y (addTerm x xs)
 fromAnd (x@(_ :& _) :& y@(Not (Atom _))) xs =
-    fromOr x (addTerm y xs)
+    fromAnd x (addTerm y xs)
 fromAnd (x@(_ :& _) :& y@(_ :& _)) xs =
     let xx = fromAnd x xs
     in xx ++ [yy | yy <- fromAnd y xs, yy `notElem` xx]
+fromAnd (Not x@(_ :& _) :& Not y@(_ :& _)) xs =
+    let xx = fromAnd (Not x) xs
+    in xx ++ [yy | yy <- fromAnd (Not y) xs, yy `notElem` xx]
 fromAnd (x :& y) xs = endList x y xs
 fromAnd _ _ = []
 
