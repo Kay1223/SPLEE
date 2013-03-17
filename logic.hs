@@ -1,5 +1,9 @@
 module Logic where
 
+--infixl 9 :&
+--infixl 8 :|
+--infixl 7 :>
+
 main :: IO ()
 main = do
     -- test cases
