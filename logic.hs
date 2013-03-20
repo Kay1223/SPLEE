@@ -1,4 +1,4 @@
-module Logic where
+module Main where
 
 --infixl 9 :&
 --infixl 8 :|
