@@ -65,8 +65,8 @@ refactor :: LogicExpr -> LogicExpr
 refactor w@(Not (Atom x) :& Atom y) = if x == y then Con else w
 refactor w@(Atom x :& Not (Atom y)) = if x == y then Con else w
     -- rules
-refactor (x :& (y :| z)) = refactor (x :& y) :| refactor (x :& z)
-refactor ((y :| z) :& x) = refactor (y :& x) :| refactor (z :& x)
+--refactor (x :& (y :| z)) = refactor (x :& y) :| refactor (x :& z)
+--refactor ((y :| z) :& x) = refactor (y :& x) :| refactor (z :& x)
 refactor (x :& y)
     | x == Tau = refactor y
     | y == Tau = refactor x
@@ -77,6 +77,9 @@ refactor (x :& y)
 -- :|
 refactor w@(Not (Atom x) :| Atom y) = if x == y then Tau else w
 refactor w@(Atom x :| Not (Atom y)) = if x == y then Tau else w
+    -- rules
+refactor (x :| (y :& z)) = refactor (x :| y) :& refactor (x :| z)
+refactor ((y :& z) :| x) = refactor (y :| x) :& refactor (z :| x)
 refactor (x :| y)
     | x == Con = refactor y
     | y == Con = refactor x
