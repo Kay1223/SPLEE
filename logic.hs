@@ -1,18 +1,81 @@
 module Main where
 
+import Text.ParserCombinators.Parsec
+
 --infixl 9 :&
 --infixl 8 :|
 --infixl 7 :>
 
+preprocess :: String -> String
+preprocess s =
+    wrap $ noSpace s
+        where
+            noSpace (' ':xs) = noSpace xs
+            noSpace (x:xs) = x:noSpace xs
+            noSpace [] = []
+            wrap f = if head f == '(' && last f == ')'
+                then f
+                else '(' : f ++ ")"
+
+atom :: Parser LogicExpr
+atom = do
+    c <- oneOf ['A'..'Z']
+    return $ Atom c
+
+truth :: Parser LogicExpr
+truth = do
+    x <- oneOf "tf"
+    case x of
+        't' -> return Tau
+        'f' -> return Con
+        _   -> error "parse error"
+
+negation :: Parser LogicExpr
+negation = do
+    _ <- char '~'
+    x <- expr
+    return $ Not x
+
+conj :: Parser LogicExpr
+conj = between (char '(') (char ')') $ do
+    x <- expr
+    _ <- char '&'
+    y <- expr
+    return (x :& y)
+
+disj :: Parser LogicExpr
+disj = between (char '(') (char ')') $ do
+    x <- expr
+    _ <- char '|'
+    y <- expr
+    return (x :| y)
+
+imply :: Parser LogicExpr
+imply = between (char '(') (char ')') $ do
+    x <- expr
+    _ <- string "=>"
+    y <- expr
+    return (x :> y)
+
+expr :: Parser LogicExpr
+expr = atom
+    <|> truth
+    <|> negation
+    <|> try conj
+    <|> try disj
+    <|> try imply
+
+readExpr :: String -> LogicExpr
+readExpr s = case parse expr "logic" s of
+    Left err -> error $ show err
+    Right val -> val
+
 main :: IO ()
 main = do
-    -- test cases
-    let expr1 = Tau :> ((Atom 'Q' :& Not (Atom 'Q') ) :| Tau)
-        expr2 = (Atom 'P' :& (Atom 'P' :| Atom 'P')) :> Atom 'Q'
-        expr3 = (Atom 'P' :| Atom 'Q') :| (Atom 'P' :| Atom 'R')
-        expr4 = ((Atom 'P' :> Atom 'Q') :> Atom 'P') :> Atom 'P'
-        exprs = [expr1, expr2, expr3, expr4]
-    mapM_ prf exprs
+    s <- getLine
+    let input = preprocess s
+    putStrLn input
+    prf $ readExpr input
 
 data LogicExpr = Atom Char              -- Atom
                | LogicExpr :& LogicExpr -- Conjunction
@@ -161,3 +224,12 @@ toOr = foldl1 (:|)
 
 toAnd :: [LogicExpr] -> LogicExpr
 toAnd = foldl1 (:&)
+
+testCases :: IO ()
+testCases = do
+    let expr1 = Tau :> ((Atom 'Q' :& Not (Atom 'Q') ) :| Tau)
+        expr2 = (Atom 'P' :& (Atom 'P' :| Atom 'P')) :> Atom 'Q'
+        expr3 = (Atom 'P' :| Atom 'Q') :| (Atom 'P' :| Atom 'R')
+        expr4 = ((Atom 'P' :> Atom 'Q') :> Atom 'P') :> Atom 'P'
+        exprs = [expr1, expr2, expr3, expr4]
+    mapM_ prf exprs
