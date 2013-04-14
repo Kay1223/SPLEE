@@ -89,7 +89,7 @@ main :: IO ()
 main = do
     s <- getLine
     let input = preprocess s
-    putStrLn input
+    --putStrLn input
     prf $ readExpr input
 
 data LogicExpr = Atom Char              -- Atom
