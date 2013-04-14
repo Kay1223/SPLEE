@@ -65,6 +65,21 @@ expr = atom
     <|> try disj
     <|> try imply
 
+{- Now you can type:
+    (((A => B) | A) & ~B) => f
+   instead of
+    (((Atom 'A' :> Atom 'B') :| Atom 'A') :& Not (Atom 'B')) :> f
+   and spaces can be omitted
+
+   proposition variable: Single Capital Character
+   not: ~
+   conjunction: &
+   disjunction: |
+   implication: =>
+   tautology: t
+   contradiction: f
+-}
+
 readExpr :: String -> LogicExpr
 readExpr s = case parse expr "logic" s of
     Left err -> error $ show err
